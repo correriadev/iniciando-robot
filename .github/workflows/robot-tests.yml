@@ -34,10 +34,10 @@ jobs:
         echo "MONGODB_URI=${MONGODB_URI}" >> .env
         echo "PORT=${PORT}" >> .env
 
-    - name: Start Backend
+    - name: Start Backend and capture log
       run: |
         cd cinema-challenge-back
-        npm start &
+        npm start > backend.log 2>&1 &
     
     - name: Wait for Backend to be ready
       run: |
