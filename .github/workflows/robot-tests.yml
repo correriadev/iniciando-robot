@@ -1,4 +1,4 @@
-name: CI - Controlled Robot Tests with Secrets
+name: CI - Controlled Robot Tests with Local MongoDB
 
 on:
   push:
@@ -10,10 +10,17 @@ jobs:
   robot-tests:
     runs-on: ubuntu-latest
 
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+        options: --health-cmd="mongosh --eval 'db.runCommand({ ping: 1 })'" --health-interval=10s --health-timeout=5s --health-retries=5
+
     env:
       BACK_REPO_URL: https://github.com/juniorschmitz/cinema-challenge-back
       FRONT_REPO_URL: https://github.com/juniorschmitz/cinema-challenge-front
-      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_URI: mongodb://localhost:27017/cinema-app
       PORT: 3000
 
     steps:
@@ -38,20 +45,20 @@ jobs:
       run: |
         cd cinema-challenge-back
         npm start > backend.log 2>&1 &
-    
+
     - name: Wait for Backend to be ready
       run: |
-          for i in {1..30}; do
-            if curl -s http://localhost:3000/api/v1/status >/dev/null; then
-              echo "Backend is up!"
-              exit 0
-            fi
-            echo "Waiting for backend..."
-            sleep 2
-            cat cinema-challenge-back/backend.log || true
-          done
-          echo "Backend did not respond in time."
-          exit 1
+        for i in {1..30}; do
+          if curl -s http://localhost:${PORT}/api/v1/status >/dev/null; then
+            echo "Backend is up!"
+            exit 0
+          fi
+          echo "Waiting for backend..."
+          sleep 2
+          cat cinema-challenge-back/backend.log || true
+        done
+        echo "Backend did not respond in time."
+        exit 1
 
     - name: Clone Frontend repository
       run: git clone $FRONT_REPO_URL cinema-challenge-front
