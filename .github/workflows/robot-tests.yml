@@ -51,7 +51,7 @@ jobs:
             cat cinema-challenge-back/backend.log || true
           done
           echo "Backend did not respond in time."
-        exit 1
+          exit 1
 
     - name: Clone Frontend repository
       run: git clone $FRONT_REPO_URL cinema-challenge-front
