@@ -22,7 +22,7 @@ jobs:
       FRONT_REPO_URL: https://github.com/juniorschmitz/cinema-challenge-front
       MONGODB_URI: mongodb://localhost:27017/cinema-app
       BACKEND_PORT: 5000
-      FRONTEND_PORT: 3000
+      FRONTEND_PORT: 3002
 
     steps:
     - name: Checkout test repository
@@ -80,7 +80,7 @@ jobs:
     - name: Start Frontend and capture log
       run: |
         cd cinema-challenge-front
-        npm start > frontend.log 2>&1 &
+        npm run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT} > frontend.log 2>&1 &
 
     - name: Wait for Frontend to be ready
       run: |
