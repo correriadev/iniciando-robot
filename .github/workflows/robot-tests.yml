@@ -41,6 +41,7 @@ jobs:
         cd cinema-challenge-back
         echo "MONGODB_URI=${MONGODB_URI}" >> .env
         echo "PORT=${BACKEND_PORT}" >> .env
+        echo "JWT_SECRET=secret_key" >> .env
 
     - name: Start Backend and capture log
       run: |
