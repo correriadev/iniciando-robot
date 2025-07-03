@@ -38,7 +38,19 @@ jobs:
       run: |
         cd cinema-challenge-back
         npm start &
-        sleep 15  # Aguarda o Backend subir
+    
+    - name: Wait for Backend to be ready
+      run: |
+        for i in {1..30}; do
+          if curl -s http://localhost:3000/api/v1/status >/dev/null; then
+            echo "Backend is up!"
+            exit 0
+          fi
+          echo "Waiting for backend..."
+          sleep 2
+        done
+        echo "Backend did not respond in time."
+        exit 1
 
     - name: Clone Frontend repository
       run: git clone $FRONT_REPO_URL cinema-challenge-front
