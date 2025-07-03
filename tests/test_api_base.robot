@@ -3,7 +3,7 @@ Library    RequestsLibrary
 Library    Collections
 
 *** Variables ***
-${BASE_URL}    http://localhost:3000
+${BASE_URL}    http://localhost:5000
 ${API_BASE_ENDPOINT}    /api/v1/
 
 *** Test Cases ***
