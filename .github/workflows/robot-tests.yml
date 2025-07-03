@@ -1,4 +1,4 @@
-name: Run Robot Tests
+name: CI - Controlled Robot Tests with Secrets
 
 on:
   push:
@@ -10,26 +10,57 @@ jobs:
   robot-tests:
     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    env:
+      BACK_REPO_URL: ${{ secrets.BACK_REPO_URL }}
+      FRONT_REPO_URL: ${{ secrets.FRONT_REPO_URL }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      PORT: 3000
 
-    - name: Setup Python
+    steps:
+    - name: Checkout test repository
+      uses: actions/checkout@v4
+
+    - name: Clone Backend repository
+      run: git clone $BACK_REPO_URL cinema-challenge-back
+
+    - name: Install Backend dependencies
+      run: |
+        cd cinema-challenge-back
+        npm install
+
+    - name: Create .env file for Backend
+      run: |
+        cd cinema-challenge-back
+        echo "MONGODB_URI=${MONGODB_URI}" >> .env
+        echo "PORT=${PORT}" >> .env
+
+    - name: Start Backend
+      run: |
+        cd cinema-challenge-back
+        npm start &
+        sleep 15  # Aguarda o Backend subir
+
+    - name: Clone Frontend repository
+      run: git clone $FRONT_REPO_URL cinema-challenge-front
+
+    - name: Set up Python and Robot Framework
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: '3.11'
 
-    - name: Install Dependencies
+    - name: Install Robot Framework dependencies
       run: |
         pip install -r requirements.txt
+        pip install robotframework-requests
 
-    - name: Run Robot Tests
+    - name: Run Robot Framework tests
       run: |
+        mkdir -p results
         robot -d results tests/
 
-    - name: Upload Robot Report
+    - name: Upload Robot Test Reports
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: Robot Test Report
+        name: robot-test-reports
         path: results
