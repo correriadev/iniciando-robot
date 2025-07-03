@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BACK_REPO_URL: ${{ variables.BACK_REPO_URL }}
-      FRONT_REPO_URL: ${{ variables.FRONT_REPO_URL }}
+      BACK_REPO_URL: https://github.com/juniorschmitz/cinema-challenge-back
+      FRONT_REPO_URL: https://github.com/juniorschmitz/cinema-challenge-front
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
       PORT: 3000
 
