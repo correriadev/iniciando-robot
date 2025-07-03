@@ -1,0 +1,706 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 6.1.1 (Python 3.12.10 on win32)" generated="20250703 19:55:37.901" rpa="false" schemaversion="4">
+<suite id="s1" name="Tests" source="C:\Projetos\iniciando-robot\tests">
+<suite id="s1-s1" name="Cinema-Api-Tests" source="C:\Projetos\iniciando-robot\tests\cinema-api-tests">
+<suite id="s1-s1-s1" name="Tests" source="C:\Projetos\iniciando-robot\tests\cinema-api-tests\tests">
+<suite id="s1-s1-s1-s1" name="Auth Tests" source="C:\Projetos\iniciando-robot\tests\cinema-api-tests\tests\auth_tests.robot">
+<kw name="Criar Sessao" library="base" type="SETUP">
+<kw name="Create Session" library="RequestsLibrary">
+<arg>cinemaApp</arg>
+<arg>${BASE_URL}</arg>
+<doc>Create Session: create a HTTP session to a server</doc>
+<msg timestamp="20250703 19:55:39.334" level="INFO">Creating Session using : alias=cinemaApp, url=http://localhost:3000/api/v1, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
+<status status="PASS" starttime="20250703 19:55:39.334" endtime="20250703 19:55:39.335"/>
+</kw>
+<status status="PASS" starttime="20250703 19:55:39.334" endtime="20250703 19:55:39.335"/>
+</kw>
+<test id="s1-s1-s1-s1-t1" name="CT-001 - Cadastro user com dados validos" line="10">
+<kw name="Limpar Dados de Teste" library="base" type="SETUP">
+<try>
+<branch type="TRY">
+<kw name="Log" library="BuiltIn">
+<arg>Iniciando limpeza de dados de teste...</arg>
+<doc>Logs the given message with the given level.</doc>
+<msg timestamp="20250703 19:55:39.335" level="INFO">Iniciando limpeza de dados de teste...</msg>
+<status status="PASS" starttime="20250703 19:55:39.335" endtime="20250703 19:55:39.335"/>
+</kw>
+<try>
+<branch type="TRY">
+<kw name="Obter Token Admin" library="auth_keywords">
+<var>${admin_token}</var>
+<kw name="Fazer Login Admin" library="auth_keywords">
+<var>${login_response}</var>
+<kw name="Fazer Login" library="auth_keywords">
+<var>${response}</var>
+<arg>${email_admin}</arg>
+<arg>${password_admin}</arg>
+<msg timestamp="20250703 19:55:39.337" level="FAIL">Variable '${email_admin}' not found.</msg>
+<status status="FAIL" starttime="20250703 19:55:39.335" endtime="20250703 19:55:39.337"/>
+</kw>
+<return>
+<value>${response}</value>
+<status status="NOT RUN" starttime="20250703 19:55:39.337" endtime="20250703 19:55:39.337"/>
+</return>
+<status status="FAIL" starttime="20250703 19:55:39.335" endtime="20250703 19:55:39.337"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${token}</var>
+<arg>${login_response.json()["data"]}</arg>
+<arg>token</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:39.337" endtime="20250703 19:55:39.337"/>
+</kw>
+<return>
+<value>${token}</value>
+<status status="NOT RUN" starttime="20250703 19:55:39.337" endtime="20250703 19:55:39.337"/>
+</return>
+<status status="FAIL" starttime="20250703 19:55:39.335" endtime="20250703 19:55:39.337"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Token admin obtido: ${admin_token}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:39.337" endtime="20250703 19:55:39.337"/>
+</kw>
+<status status="FAIL" starttime="20250703 19:55:39.335" endtime="20250703 19:55:39.337"/>
+</branch>
+<branch type="EXCEPT" variable="${error}">
+<kw name="Log" library="BuiltIn">
+<arg>Erro ao obter token admin, criando admin temporário para limpeza: ${error}</arg>
+<doc>Logs the given message with the given level.</doc>
+<msg timestamp="20250703 19:55:39.337" level="INFO">Erro ao obter token admin, criando admin temporário para limpeza: Variable '${email_admin}' not found.</msg>
+<status status="PASS" starttime="20250703 19:55:39.337" endtime="20250703 19:55:39.337"/>
+</kw>
+<kw name="Criar dados validos para administrador" library="auth_keywords">
+<var>${create_response}</var>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${admin_data}</var>
+<arg>name=Admin User</arg>
+<arg>email=admin@example.com</arg>
+<arg>password=admin123</arg>
+<arg>role=admin</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20250703 19:55:39.337" level="INFO">${admin_data} = {'name': 'Admin User', 'email': 'admin@example.com', 'password': 'admin123', 'role': 'admin'}</msg>
+<status status="PASS" starttime="20250703 19:55:39.337" endtime="20250703 19:55:39.338"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${email_admin}</var>
+<arg>${admin_data}</arg>
+<arg>email</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<msg timestamp="20250703 19:55:39.338" level="INFO">${email_admin} = admin@example.com</msg>
+<status status="PASS" starttime="20250703 19:55:39.338" endtime="20250703 19:55:39.338"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${password_admin}</var>
+<arg>${admin_data}</arg>
+<arg>password</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<msg timestamp="20250703 19:55:39.338" level="INFO">${password_admin} = admin123</msg>
+<status status="PASS" starttime="20250703 19:55:39.338" endtime="20250703 19:55:39.338"/>
+</kw>
+<kw name="Set Test Variable" library="BuiltIn">
+<arg>${admin_data}</arg>
+<doc>Makes a variable available everywhere within the scope of the current test.</doc>
+<msg timestamp="20250703 19:55:39.338" level="INFO">${admin_data} = {'name': 'Admin User', 'email': 'admin@example.com', 'password': 'admin123', 'role': 'admin'}</msg>
+<status status="PASS" starttime="20250703 19:55:39.338" endtime="20250703 19:55:39.338"/>
+</kw>
+<kw name="Set Test Variable" library="BuiltIn">
+<arg>${email_admin}</arg>
+<doc>Makes a variable available everywhere within the scope of the current test.</doc>
+<msg timestamp="20250703 19:55:39.338" level="INFO">${email_admin} = admin@example.com</msg>
+<status status="PASS" starttime="20250703 19:55:39.338" endtime="20250703 19:55:39.338"/>
+</kw>
+<kw name="Set Test Variable" library="BuiltIn">
+<arg>${password_admin}</arg>
+<doc>Makes a variable available everywhere within the scope of the current test.</doc>
+<msg timestamp="20250703 19:55:39.338" level="INFO">${password_admin} = admin123</msg>
+<status status="PASS" starttime="20250703 19:55:39.338" endtime="20250703 19:55:39.338"/>
+</kw>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${headers}</var>
+<arg>Content-Type=application/json</arg>
+<arg>Accept=application/json</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20250703 19:55:39.338" level="INFO">${headers} = {'Content-Type': 'application/json', 'Accept': 'application/json'}</msg>
+<status status="PASS" starttime="20250703 19:55:39.338" endtime="20250703 19:55:39.338"/>
+</kw>
+<kw name="POST On Session" library="RequestsLibrary">
+<var>${response}</var>
+<arg>cinemaApp</arg>
+<arg>/setup/admin</arg>
+<arg>json=${admin_data}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<msg timestamp="20250703 19:55:43.468" level="WARN">Retrying (RetryAdapter(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('&lt;urllib3.connection.HTTPConnection object at 0x000001EA55CD5DC0&gt;: Failed to establish a new connection: [WinError 10061] Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente')': /api/v1/setup/admin</msg>
+<msg timestamp="20250703 19:55:47.740" level="WARN">Retrying (RetryAdapter(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('&lt;urllib3.connection.HTTPConnection object at 0x000001EA55CD5310&gt;: Failed to establish a new connection: [WinError 10061] Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente')': /api/v1/setup/admin</msg>
+<status status="FAIL" starttime="20250703 19:55:39.339" endtime="20250703 19:55:51.809"/>
+</kw>
+<return>
+<value>${response}</value>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</return>
+<status status="FAIL" starttime="20250703 19:55:39.337" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Admin temporário criado para limpeza</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Obter Token Admin" library="auth_keywords">
+<var>${admin_token}</var>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Token admin obtido após criação temporária: ${admin_token}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="FAIL" starttime="20250703 19:55:39.337" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="FAIL" starttime="20250703 19:55:39.335" endtime="20250703 19:55:51.809"/>
+</try>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${headers}</var>
+<arg>Authorization=Bearer ${admin_token}</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Limpando reservas...</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<try>
+<branch type="TRY">
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${reservations_response}</var>
+<arg>cinemaApp</arg>
+<arg>/reservations</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Response reservas: ${reservations_response.text}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${reservations}</var>
+<arg>${reservations_response.json()["data"]}</arg>
+<arg>reservations</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<for flavor="IN">
+<var>${reservation}</var>
+<value>@{reservations}</value>
+<iter>
+<var name="${reservation}"/>
+<kw name="Get From Dictionary" library="Collections">
+<var>${reservation_id}</var>
+<arg>${reservation}</arg>
+<arg>_id</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Deletando reserva: ${reservation_id}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="DELETE On Session" library="RequestsLibrary">
+<arg>cinemaApp</arg>
+<arg>/reservations/${reservation_id}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a DELETE request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</iter>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</for>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="EXCEPT" variable="${error}">
+<kw name="Log" library="BuiltIn">
+<arg>Erro ao limpar reservas: ${error}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</try>
+<kw name="Log" library="BuiltIn">
+<arg>Limpando sessões...</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<try>
+<branch type="TRY">
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${sessions_response}</var>
+<arg>cinemaApp</arg>
+<arg>/sessions</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Response sessões: ${sessions_response.text}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${sessions}</var>
+<arg>${sessions_response.json()["data"]}</arg>
+<arg>sessions</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<for flavor="IN">
+<var>${session}</var>
+<value>@{sessions}</value>
+<iter>
+<var name="${session}"/>
+<kw name="Get From Dictionary" library="Collections">
+<var>${session_id}</var>
+<arg>${session}</arg>
+<arg>_id</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Deletando sessão: ${session_id}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="DELETE On Session" library="RequestsLibrary">
+<arg>cinemaApp</arg>
+<arg>/sessions/${session_id}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a DELETE request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</iter>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</for>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="EXCEPT" variable="${error}">
+<kw name="Log" library="BuiltIn">
+<arg>Erro ao limpar sessões: ${error}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</try>
+<kw name="Log" library="BuiltIn">
+<arg>Limpando filmes...</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<try>
+<branch type="TRY">
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${movies_response}</var>
+<arg>cinemaApp</arg>
+<arg>/movies</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Response filmes: ${movies_response.text}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${movies}</var>
+<arg>${movies_response.json()["data"]}</arg>
+<arg>movies</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<for flavor="IN">
+<var>${movie}</var>
+<value>@{movies}</value>
+<iter>
+<var name="${movie}"/>
+<kw name="Get From Dictionary" library="Collections">
+<var>${movie_id}</var>
+<arg>${movie}</arg>
+<arg>_id</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Deletando filme: ${movie_id}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="DELETE On Session" library="RequestsLibrary">
+<arg>cinemaApp</arg>
+<arg>/movies/${movie_id}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a DELETE request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</iter>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</for>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="EXCEPT" variable="${error}">
+<kw name="Log" library="BuiltIn">
+<arg>Erro ao limpar filmes: ${error}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</try>
+<kw name="Log" library="BuiltIn">
+<arg>Limpando cinemas...</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<try>
+<branch type="TRY">
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${theaters_response}</var>
+<arg>cinemaApp</arg>
+<arg>/theaters</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Response cinemas: ${theaters_response.text}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${theaters}</var>
+<arg>${theaters_response.json()}</arg>
+<arg>data</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<for flavor="IN">
+<var>${theater}</var>
+<value>@{theaters}</value>
+<iter>
+<var name="${theater}"/>
+<kw name="Get From Dictionary" library="Collections">
+<var>${theater_id}</var>
+<arg>${theater}</arg>
+<arg>_id</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Deletando cinema: ${theater_id}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="DELETE On Session" library="RequestsLibrary">
+<arg>cinemaApp</arg>
+<arg>/theaters/${theater_id}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a DELETE request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</iter>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</for>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="EXCEPT" variable="${error}">
+<kw name="Log" library="BuiltIn">
+<arg>Erro ao limpar cinemas: ${error}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</try>
+<kw name="Log" library="BuiltIn">
+<arg>Limpando usuários de teste...</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Procurando usuários com email: ${USER_EMAIL} ou ${ADMIN_EMAIL}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<try>
+<branch type="TRY">
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${users_response}</var>
+<arg>cinemaApp</arg>
+<arg>/users</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Response users: ${users_response.text}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Set Variable" library="BuiltIn">
+<var>${response_json}</var>
+<arg>${users_response.json()}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Response JSON completo: ${response_json}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<if>
+<branch type="IF" condition="'data' in $response_json">
+<kw name="Get From Dictionary" library="Collections">
+<var>${data}</var>
+<arg>${response_json}</arg>
+<arg>data</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Data da resposta: ${data}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<if>
+<branch type="IF" condition="'users' in $data">
+<kw name="Get From Dictionary" library="Collections">
+<var>${users}</var>
+<arg>${data}</arg>
+<arg>users</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Usuários encontrados na chave 'users': ${users}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="ELSE IF" condition="'user' in $data">
+<kw name="Get From Dictionary" library="Collections">
+<var>${users}</var>
+<arg>${data}</arg>
+<arg>user</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Usuários encontrados na chave 'user': ${users}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="ELSE">
+<kw name="Set Variable" library="BuiltIn">
+<var>${users}</var>
+<arg>${data}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Usando data diretamente como lista de usuários: ${users}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</if>
+<if>
+<branch type="IF" condition="$users is not None">
+<kw name="Log" library="BuiltIn">
+<arg>Total de usuários encontrados: ${users.__len__()}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<for flavor="IN">
+<var>${user}</var>
+<value>@{users}</value>
+<iter>
+<var name="${user}"/>
+<kw name="Get From Dictionary" library="Collections">
+<var>${user_email}</var>
+<arg>${user}</arg>
+<arg>email</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Verificando usuário: ${user_email}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<if>
+<branch type="IF" condition="'${user_email}' == '${USER_EMAIL}' or '${user_email}' == '${ADMIN_EMAIL}'">
+<kw name="Get From Dictionary" library="Collections">
+<var>${user_id}</var>
+<arg>${user}</arg>
+<arg>_id</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Deletando usuário de teste: ${user_email} (ID: ${user_id})</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="DELETE On Session" library="RequestsLibrary">
+<var>${delete_response}</var>
+<arg>cinemaApp</arg>
+<arg>/users/${user_id}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a DELETE request on a previously created HTTP Session.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Resposta do DELETE: ${delete_response.status_code}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="ELSE">
+<kw name="Log" library="BuiltIn">
+<arg>Usuário ${user_email} não é de teste, mantendo...</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</if>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</iter>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</for>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="ELSE">
+<kw name="Log" library="BuiltIn">
+<arg>Nenhum usuário encontrado ou estrutura inesperada</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</if>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="ELSE">
+<kw name="Log" library="BuiltIn">
+<arg>Resposta não contém 'data', estrutura inesperada: ${response_json}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</if>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="EXCEPT" variable="${error}">
+<kw name="Log" library="BuiltIn">
+<arg>Erro ao limpar usuários: ${error}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</try>
+<kw name="Log" library="BuiltIn">
+<arg>Limpeza de dados concluída!</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="FAIL" starttime="20250703 19:55:39.335" endtime="20250703 19:55:51.809"/>
+</branch>
+<branch type="EXCEPT" variable="${error}">
+<kw name="Log" library="BuiltIn">
+<arg>Erro ao limpar dados: ${error}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="FAIL" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>Stack trace: ${error}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<status status="FAIL" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</branch>
+<status status="FAIL" starttime="20250703 19:55:39.335" endtime="20250703 19:55:51.809"/>
+</try>
+<status status="FAIL" starttime="20250703 19:55:39.335" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Limpar Dados de Teste" library="base" type="TEARDOWN">
+<try>
+<branch type="TRY">
+<kw name="Log" library="BuiltIn">
+<arg>Iniciando limpeza de dados de teste...</arg>
+<doc>Logs the given message with the given level.</doc>
+<msg timestamp="20250703 19:55:51.809" level="INFO">Iniciando limpeza de dados de teste...</msg>
+<status status="PASS" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<try>
+<branch type="TRY">
+<kw name="Obter Token Admin" library="auth_keywords">
+<var>${admin_token}</var>
+<kw name="Fazer Login Admin" library="auth_keywords">
+<var>${login_response}</var>
+<kw name="Fazer Login" library="auth_keywords">
+<var>${response}</var>
+<arg>${email_admin}</arg>
+<arg>${password_admin}</arg>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${headers}</var>
+<arg>Content-Type=application/json</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20250703 19:55:51.809" level="INFO">${headers} = {'Content-Type': 'application/json'}</msg>
+<status status="PASS" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${body}</var>
+<arg>email=${email}</arg>
+<arg>password=${password}</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20250703 19:55:51.809" level="INFO">${body} = {'email': 'admin@example.com', 'password': 'admin123'}</msg>
+<status status="PASS" starttime="20250703 19:55:51.809" endtime="20250703 19:55:51.809"/>
+</kw>
+<kw name="POST On Session" library="RequestsLibrary">
+<var>${response}</var>
+<arg>cinemaApp</arg>
+<arg>/auth/login</arg>
+<arg>json=${body}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<errors>
+<msg timestamp="20250703 19:55:43.468" level="WARN">Retrying (RetryAdapter(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('&lt;urllib3.connection.HTTPConnection object at 0x000001EA55CD5DC0&gt;: Failed to establish a new connection: [WinError 10061] Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente')': /api/v1/setup/admin</msg>
+<msg timestamp="20250703 19:55:47.740" level="WARN">Retrying (RetryAdapter(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('&lt;urllib3.connection.HTTPConnection object at 0x000001EA55CD5310&gt;: Failed to establish a new connection: [WinError 10061] Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente')': /api/v1/setup/admin</msg>
+<msg timestamp="20250703 19:55:55.909" level="ERROR">Execution stopped by user.</msg>
+</errors>
+</robot>
