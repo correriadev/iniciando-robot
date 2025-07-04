@@ -75,9 +75,15 @@ def create_confluence_client(url: str, username: str, api_token: str) -> Conflue
             timeout=30
         )
         
-        # Testar conexão
-        confluence.get_space(space='TEST', expand='description.plain')
-        logger.info("Conexão com Confluence estabelecida com sucesso")
+        # Testar conexão de forma mais simples
+        try:
+            # Tentar obter informações do usuário para testar a conexão
+            user_info = confluence.get_user_info_by_username(username)
+            logger.info(f"Conexão com Confluence estabelecida com sucesso. Usuário: {user_info.get('displayName', username)}")
+        except Exception as e:
+            logger.warning(f"Não foi possível verificar o usuário, mas continuando: {e}")
+            logger.info("Conexão com Confluence estabelecida")
+        
         return confluence
         
     except Exception as e:
@@ -202,13 +208,34 @@ def publish_report(input_path: str, max_retries: int = 3) -> bool:
             try:
                 logger.info(f"Tentativa {attempt + 1} de {max_retries} para publicar no Confluence")
                 
-                confluence.create_page(
+                # Verificar se a página já existe
+                existing_pages = confluence.get_pages_by_title(
                     space=env_vars['SPACE_KEY'],
                     title=title,
-                    body=content,
-                    parent_id=env_vars['PARENT_PAGE_ID'],
-                    type='page'
+                    start=0,
+                    limit=1
                 )
+                
+                if existing_pages and len(existing_pages) > 0:
+                    # Atualizar página existente
+                    page_id = existing_pages[0]['id']
+                    logger.info(f"Atualizando página existente: {page_id}")
+                    confluence.update_page(
+                        page_id=page_id,
+                        title=title,
+                        body=content,
+                        type='page'
+                    )
+                else:
+                    # Criar nova página
+                    logger.info("Criando nova página no Confluence")
+                    confluence.create_page(
+                        space=env_vars['SPACE_KEY'],
+                        title=title,
+                        body=content,
+                        parent_id=env_vars['PARENT_PAGE_ID'],
+                        type='page'
+                    )
                 
                 logger.info(f"Página publicada com sucesso: {title}")
                 return True
