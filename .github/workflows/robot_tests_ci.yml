@@ -25,6 +25,36 @@ jobs:
       FRONTEND_PORT: 3002
 
     steps:
+    - name: 🔎 Validate required environment variables
+      run: |
+        echo "Validando variáveis de ambiente necessárias..."
+        REQUIRED_VARS=(
+          BACK_REPO_URL
+          FRONT_REPO_URL
+          MONGODB_URI
+          BACKEND_PORT
+          FRONTEND_PORT
+        )
+        MISSING=0
+        for VAR in "${REQUIRED_VARS[@]}"; do
+          if [ -z "${!VAR}" ]; then
+            echo "❌ Variável obrigatória não definida: $VAR"
+            MISSING=1
+          else
+            echo "✅ $VAR = ${!VAR}"
+          fi
+        done
+        # Validar secret do Gemini para as próximas pipelines
+        if [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
+          echo "⚠️ Atenção: O secret GEMINI_API_KEY não está configurado. A análise de criticidade não funcionará."
+        else
+          echo "✅ Secret GEMINI_API_KEY está configurado."
+        fi
+        if [ $MISSING -eq 1 ]; then
+          echo "❌ Corrija as variáveis de ambiente antes de continuar."
+          exit 1
+        fi
+
     - name: Checkout test repository
       uses: actions/checkout@v4
 
