@@ -38,7 +38,7 @@ jobs:
         with:
           # O nome do artefato deve ser o mesmo usado no 'upload-artifact'
           # do seu workflow de CI/CD.
-          name: robot-logs
+          name: robot-test-reports
           path: public # Baixa os arquivos para uma pasta 'public'
           
           # Informa à action de qual execução de workflow baixar o artefato.
