@@ -147,10 +147,13 @@ class AIRTOrchestrator:
             "--input", str(self.analysis_output)
         ])
     
-    def run(self) -> bool:
+    def run(self, skip_publish: bool = False) -> bool:
         """
         Executa o fluxo completo do AIRT
         
+        Args:
+            skip_publish: Se True, pula a publicação no Confluence
+            
         Returns:
             bool: True se todo o fluxo foi executado com sucesso
         """
@@ -160,6 +163,18 @@ class AIRTOrchestrator:
         logger.info(f"Diretório de resultados: {self.results_dir}")
         logger.info(f"Diretório de saída: {self.output_dir}")
         
+        # Verificar se os arquivos de entrada existem
+        logger.info("🔍 Verificando arquivos de entrada...")
+        if self.robot_input.exists():
+            logger.info(f"✅ Arquivo Robot Framework encontrado: {self.robot_input}")
+        else:
+            logger.warning(f"⚠️ Arquivo Robot Framework não encontrado: {self.robot_input}")
+        
+        if self.postman_input.exists():
+            logger.info(f"✅ Arquivo Postman encontrado: {self.postman_input}")
+        else:
+            logger.warning(f"⚠️ Arquivo Postman não encontrado: {self.postman_input}")
+        
         start_time = datetime.now()
         
         # Executar cada etapa do fluxo
@@ -167,8 +182,13 @@ class AIRTOrchestrator:
             ("Extração Robot Framework", self.extract_robot_data),
             ("Extração Postman", self.extract_postman_data),
             ("Análise de Resultados", self.analyze_results),
-            ("Publicação Confluence", self.publish_to_confluence)
         ]
+        
+        # Adicionar publicação apenas se não for pulada
+        if not skip_publish:
+            steps.append(("Publicação Confluence", self.publish_to_confluence))
+        else:
+            logger.info("⏭️ Pulando publicação no Confluence (modo teste)")
         
         for step_name, step_func in steps:
             logger.info(f"🔄 Executando: {step_name}")
@@ -185,6 +205,22 @@ class AIRTOrchestrator:
         logger.info(f"🎉 Processo concluído com sucesso em {duration}")
         logger.info(f"📁 Arquivos gerados em: {self.output_dir}")
         
+        # Mostrar resumo dos resultados
+        if self.analysis_output.exists():
+            try:
+                import json
+                with open(self.analysis_output, 'r', encoding='utf-8') as f:
+                    summary = json.load(f)
+                
+                stats = summary['summary']
+                logger.info(f"📊 Resumo dos resultados:")
+                logger.info(f"   - Total de testes: {stats['total_tests']}")
+                logger.info(f"   - Passaram: {stats['passed_tests']}")
+                logger.info(f"   - Falharam: {stats['failed_tests']}")
+                logger.info(f"   - Taxa de sucesso: {stats['success_rate']}%")
+            except Exception as e:
+                logger.warning(f"Não foi possível mostrar o resumo: {e}")
+        
         return True
 
 def main():
@@ -199,6 +235,7 @@ Exemplos de uso:
   python main.py
   python main.py --base-dir /caminho/para/projeto
   python main.py --verbose
+  python main.py --skip-publish  # Para testes locais sem Confluence
         """
     )
     
@@ -217,7 +254,7 @@ Exemplos de uso:
     parser.add_argument(
         '--skip-publish',
         action='store_true',
-        help='Pular a publicação no Confluence'
+        help='Pular a publicação no Confluence (útil para testes locais)'
     )
     
     args = parser.parse_args()
@@ -229,7 +266,7 @@ Exemplos de uso:
     orchestrator = AIRTOrchestrator(args.base_dir)
     
     # Executar fluxo
-    success = orchestrator.run()
+    success = orchestrator.run(skip_publish=args.skip_publish)
     
     if not success:
         logger.error("❌ Falha no processo AIRT")

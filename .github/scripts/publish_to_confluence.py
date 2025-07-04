@@ -75,13 +75,13 @@ def create_confluence_client(url: str, username: str, api_token: str) -> Conflue
             timeout=30
         )
         
-        # Testar conexão de forma mais simples
+        # Testar conexão de forma simples
         try:
-            # Tentar obter informações do usuário para testar a conexão
-            user_info = confluence.get_user_info_by_username(username)
-            logger.info(f"Conexão com Confluence estabelecida com sucesso. Usuário: {user_info.get('displayName', username)}")
+            # Tentar obter informações básicas do espaço para testar a conexão
+            space_info = confluence.get_space(space_key=os.environ.get('SPACE_KEY', 'TEST'))
+            logger.info(f"Conexão com Confluence estabelecida com sucesso. Espaço: {space_info.get('name', 'N/A')}")
         except Exception as e:
-            logger.warning(f"Não foi possível verificar o usuário, mas continuando: {e}")
+            logger.warning(f"Não foi possível verificar o espaço, mas continuando: {e}")
             logger.info("Conexão com Confluence estabelecida")
         
         return confluence
@@ -208,40 +208,32 @@ def publish_report(input_path: str, max_retries: int = 3) -> bool:
             try:
                 logger.info(f"Tentativa {attempt + 1} de {max_retries} para publicar no Confluence")
                 
-                # Verificar se a página já existe
-                existing_pages = confluence.get_pages_by_title(
+                # Tentar criar página diretamente sem verificar existência
+                logger.info("Criando nova página no Confluence")
+                result = confluence.create_page(
                     space=env_vars['SPACE_KEY'],
                     title=title,
-                    start=0,
-                    limit=1
+                    body=content,
+                    parent_id=env_vars['PARENT_PAGE_ID'],
+                    type='page'
                 )
                 
-                if existing_pages and len(existing_pages) > 0:
-                    # Atualizar página existente
-                    page_id = existing_pages[0]['id']
-                    logger.info(f"Atualizando página existente: {page_id}")
-                    confluence.update_page(
-                        page_id=page_id,
-                        title=title,
-                        body=content,
-                        type='page'
-                    )
+                if result and 'id' in result:
+                    logger.info(f"Página publicada com sucesso: {title} (ID: {result['id']})")
+                    return True
                 else:
-                    # Criar nova página
-                    logger.info("Criando nova página no Confluence")
-                    confluence.create_page(
-                        space=env_vars['SPACE_KEY'],
-                        title=title,
-                        body=content,
-                        parent_id=env_vars['PARENT_PAGE_ID'],
-                        type='page'
-                    )
-                
-                logger.info(f"Página publicada com sucesso: {title}")
-                return True
+                    logger.warning("Resposta inesperada do Confluence")
+                    raise Exception("Resposta inesperada do Confluence")
                 
             except Exception as e:
-                logger.warning(f"Tentativa {attempt + 1} falhou: {e}")
+                error_msg = str(e)
+                logger.warning(f"Tentativa {attempt + 1} falhou: {error_msg}")
+                
+                # Se for erro de permissão, não tentar novamente
+                if "permission" in error_msg.lower() or "not have permission" in error_msg.lower():
+                    logger.error("Erro de permissão detectado. Verifique as permissões do usuário no Confluence.")
+                    return False
+                
                 if attempt < max_retries - 1:
                     time.sleep(2 ** attempt)  # Backoff exponencial
                 else:
