@@ -268,11 +268,56 @@ jobs:
             exit 1
           fi
           
-          # Extrair estatísticas dos testes
+          echo "📄 Estrutura do report.html:"
+          echo "Tamanho do arquivo: $(wc -l < public/report.html) linhas"
+          echo "Primeiras 10 linhas:"
+          head -10 public/report.html
+          echo ""
+          echo "Buscando por padrões de estatísticas..."
+          grep -i "total\|pass\|fail\|skip\|statistics" public/report.html | head -5
+          
+          # Extrair estatísticas dos testes com múltiplas estratégias
+          echo "🔍 Analisando estrutura do report.html..."
+          
+          # Estratégia 1: Buscar por padrões comuns no Robot Framework
           TOTAL_TESTS=$(grep -oP 'Total:\s*\K[0-9]+' public/report.html | head -1)
           PASSED_TESTS=$(grep -oP 'Pass:\s*\K[0-9]+' public/report.html | head -1)
           FAILED_TESTS=$(grep -oP 'Fail:\s*\K[0-9]+' public/report.html | head -1)
           SKIPPED_TESTS=$(grep -oP 'Skip:\s*\K[0-9]+' public/report.html | head -1)
+          
+          # Estratégia 2: Se não encontrou, buscar por outras variações
+          if [ -z "$TOTAL_TESTS" ]; then
+            TOTAL_TESTS=$(grep -oP 'tests="\K[0-9]+' public/report.html | head -1)
+          fi
+          if [ -z "$PASSED_TESTS" ]; then
+            PASSED_TESTS=$(grep -oP 'pass="\K[0-9]+' public/report.html | head -1)
+          fi
+          if [ -z "$FAILED_TESTS" ]; then
+            FAILED_TESTS=$(grep -oP 'fail="\K[0-9]+' public/report.html | head -1)
+          fi
+          if [ -z "$SKIPPED_TESTS" ]; then
+            SKIPPED_TESTS=$(grep -oP 'skip="\K[0-9]+' public/report.html | head -1)
+          fi
+          
+          # Estratégia 3: Buscar por tabelas de estatísticas
+          if [ -z "$TOTAL_TESTS" ]; then
+            TOTAL_TESTS=$(grep -A 10 -B 5 'Statistics' public/report.html | grep -oP '[0-9]+' | head -1)
+          fi
+          
+          # Estratégia 4: Contar manualmente se necessário
+          if [ -z "$TOTAL_TESTS" ]; then
+            echo "📊 Contando testes manualmente..."
+            TOTAL_TESTS=$(grep -c 'class="pass\|class="fail\|class="skip"' public/report.html || echo "0")
+          fi
+          if [ -z "$PASSED_TESTS" ]; then
+            PASSED_TESTS=$(grep -c 'class="pass"' public/report.html || echo "0")
+          fi
+          if [ -z "$FAILED_TESTS" ]; then
+            FAILED_TESTS=$(grep -c 'class="fail"' public/report.html || echo "0")
+          fi
+          if [ -z "$SKIPPED_TESTS" ]; then
+            SKIPPED_TESTS=$(grep -c 'class="skip"' public/report.html || echo "0")
+          fi
           
           # Valores padrão se não encontrados
           TOTAL_TESTS=${TOTAL_TESTS:-0}
@@ -295,11 +340,11 @@ jobs:
           # Extrair detalhes dos testes que falharam
           if [ "$FAILED_TESTS" -gt 0 ]; then
             echo "🔍 Extraindo detalhes dos testes falhados..."
-            cat > test_failures.txt << 'EOF'
+            cat > test_failures.txt << 'FAILURES_EOF'
             DETALHES DOS TESTES FALHADOS:
             =============================
             
-            EOF
+            FAILURES_EOF
             grep -A 5 -B 5 'class="fail"' public/report.html | grep -E '<td|<tr' | head -20 >> test_failures.txt
             echo "" >> test_failures.txt
             echo "MENSAGENS DE ERRO:" >> test_failures.txt
@@ -308,7 +353,7 @@ jobs:
           fi
 
       - name: 🤖 Analyze test failures with Gemini AI
-        if: env.FAILED_TESTS != '0' && env.FAILED_TESTS != ''
+        if: env.FAILED_TESTS != '0' && env.FAILED_TESTS != '' && env.FAILED_TESTS != null
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
