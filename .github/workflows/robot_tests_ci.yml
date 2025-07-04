@@ -117,10 +117,11 @@ jobs:
         # Inicializa o Robot Framework Browser com os navegadores
         rfbrowser init
 
+    - name: Make script executable
+      run: chmod +x run_tests_ci.sh
+
     - name: Run Robot Framework tests
-      run: |
-        mkdir -p results
-        robot -d results tests/
+      run: ./run_tests_ci.sh
 
     - name: Upload Robot Test Reports
       if: always()
