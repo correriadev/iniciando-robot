@@ -52,26 +52,30 @@ jobs:
             exit 1
           fi
 
-          # Extrai o número de falhas usando grep e sed simples (para XML do Robot)
-          FAILED_COUNT=$(grep '<stat type="fail">' public/output.xml | sed -E 's/.*fail="([0-9]+)".*/\1/')
+          # Extrai o número de falhas
+          FAILED_COUNT=$(grep -oP 'fail="\K[0-9]+' public/output.xml | head -1)
+          if [ -z "$FAILED_COUNT" ]; then
+            FAILED_COUNT=0
+          fi
 
           # Define o prompt conforme o número de falhas
           if [ "$FAILED_COUNT" -eq 0 ]; then
             PROMPT="Todos os testes passaram com sucesso. Não há erros. Pode confirmar que o sistema está saudável?"
           else
-            PROMPT="Foram encontrados $FAILED_COUNT erros nos testes automatizados. Analise o relatório a seguir e forneça insights ou possíveis causas para as falhas."
+            PROMPT="Foram encontrados $FAILED_COUNT erros nos testes automatizados. Abaixo está um trecho do relatório. Forneça insights ou possíveis causas para as falhas."
           fi
 
-          # Codifica o relatório em Base64 para evitar problemas de caracteres
-          REPORT_CONTENT=$(base64 -w 0 public/report.html)
+          # Pega os primeiros 50 linhas do relatório (ajuste conforme necessário)
+          SUMMARY=$(head -n 50 public/report.html | sed 's/"/\\"/g')
 
-          # Envia para o Gemini
+          # Monta e envia o JSON
           curl -X POST https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent \
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer $GEMINI_API_KEY" \
           -d "{
                 \"contents\": [
                   {\"role\": \"user\", \"parts\": [{\"text\": \"$PROMPT\"}]},
-                  {\"role\": \"user\", \"parts\": [{\"text\": \"$REPORT_CONTENT\"}]}
+                  {\"role\": \"user\", \"parts\": [{\"text\": \"$SUMMARY\"}]}
                 ]
               }"
+
