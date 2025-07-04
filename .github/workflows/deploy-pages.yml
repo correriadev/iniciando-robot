@@ -68,14 +68,15 @@ jobs:
           # Pega os primeiros 50 linhas do relatório (ajuste conforme necessário)
           SUMMARY=$(head -n 50 public/report.html | sed 's/"/\\"/g')
 
-          # Monta e envia o JSON
-          curl -X POST https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent \
+          # Monta e envia o JSON corretamente com a chave na URL
+          curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$GEMINI_API_KEY" \
           -H "Content-Type: application/json" \
-          -H "Authorization: Bearer $GEMINI_API_KEY" \
           -d "{
                 \"contents\": [
                   {\"role\": \"user\", \"parts\": [{\"text\": \"$PROMPT\"}]},
                   {\"role\": \"user\", \"parts\": [{\"text\": \"$SUMMARY\"}]}
                 ]
               }"
+
+
 
