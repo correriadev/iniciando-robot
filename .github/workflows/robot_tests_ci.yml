@@ -112,18 +112,21 @@ jobs:
 
     - name: Install Robot Framework dependencies
       run: |
-        # Instala todas as dependências do requirements.txt atualizado
         pip install -r requirements.txt
-        # Inicializa o Robot Framework Browser com os navegadores
         rfbrowser init
+
+    - name: Install xvfb
+      run: sudo apt-get update && sudo apt-get install -y xvfb
 
     - name: Make script executable
       run: chmod +x run_tests_ci.sh
 
-    - name: Run Robot Framework tests
-      run: ./run_tests_ci.sh
+    - name: Run Robot Framework tests with xvfb and screenshots
+      run: |
+        mkdir -p results
+        xvfb-run --auto-servernum ./run_tests_ci.sh
 
-    - name: Upload Robot Test Reports
+    - name: Upload Robot Test Reports and Screenshots
       if: always()
       uses: actions/upload-artifact@v4
       with:
