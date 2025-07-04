@@ -1,59 +1,77 @@
-# .github/workflows/deploy-pages.yml
 name: DEPLOY_GITHUB_PAGES
 
 on:
-  # Este gatilho (trigger) é a forma mais robusta de encadear workflows.
-  # Ele vai iniciar este workflow APENAS DEPOIS que o workflow "CI/CD Pipeline"
-  # for concluído. Isso evita erros de "artefato não encontrado".
   workflow_run:
-    workflows: ["ROBOT_TESTS_CI"] # <-- IMPORTANTE: O nome deve ser EXATAMENTE igual ao 'name:' do seu outro arquivo de workflow.
+    workflows: ["ROBOT_TESTS_CI"]
     types:
       - completed
 
-# Permissões necessárias para fazer o deploy no GitHub Pages.
 permissions:
   contents: read
   pages: write
-  id-token: write # Essencial para as versões mais recentes da action de deploy.
+  id-token: write
 
 jobs:
   deploy:
-    # Esta condição garante que o deploy só aconteça se o workflow anterior
-    # (CI/CD Pipeline) tiver sido executado com sucesso.
     if: github.event.workflow_run.conclusion == 'success'
     
     runs-on: ubuntu-latest
     
-    # Configura o ambiente de deploy para o GitHub Pages
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      # A action de checkout não é mais necessária, pois vamos baixar o artefato
-      # diretamente do outro workflow.
-
       - name: ⬇️ Download artifact from the completed workflow
         uses: actions/download-artifact@v4
         with:
-          # O nome do artefato deve ser o mesmo usado no 'upload-artifact'
-          # do seu workflow de CI/CD.
           name: robot-test-reports
-          path: public # Baixa os arquivos para uma pasta 'public'
-          
-          # Informa à action de qual execução de workflow baixar o artefato.
+          path: public
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
       - name: ⚙️ Configure Pages
-        uses: actions/configure-pages@v5 # <-- ATUALIZADO
+        uses: actions/configure-pages@v5
 
       - name: 📦 Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3 # <-- ATUALIZADO
+        uses: actions/upload-pages-artifact@v3
         with:
-          # Faz o upload da pasta que contém os logs para o GitHub Pages
           path: ./public
 
       - name: 📢 Publish to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 # <-- ATUALIZADO
+        uses: actions/deploy-pages@v4
+
+      - name: 📊 Check test results and send to Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          # Verifica se o output.xml existe
+          if [ ! -f public/output.xml ]; then
+            echo "Arquivo output.xml não encontrado!"
+            exit 1
+          fi
+
+          # Extrai o número de falhas usando grep e sed simples (para XML do Robot)
+          FAILED_COUNT=$(grep '<stat type="fail">' public/output.xml | sed -E 's/.*fail="([0-9]+)".*/\1/')
+
+          # Define o prompt conforme o número de falhas
+          if [ "$FAILED_COUNT" -eq 0 ]; then
+            PROMPT="Todos os testes passaram com sucesso. Não há erros. Pode confirmar que o sistema está saudável?"
+          else
+            PROMPT="Foram encontrados $FAILED_COUNT erros nos testes automatizados. Analise o relatório a seguir e forneça insights ou possíveis causas para as falhas."
+          fi
+
+          # Codifica o relatório em Base64 para evitar problemas de caracteres
+          REPORT_CONTENT=$(base64 -w 0 public/report.html)
+
+          # Envia para o Gemini
+          curl -X POST https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $GEMINI_API_KEY" \
+          -d "{
+                \"contents\": [
+                  {\"role\": \"user\", \"parts\": [{\"text\": \"$PROMPT\"}]},
+                  {\"role\": \"user\", \"parts\": [{\"text\": \"$REPORT_CONTENT\"}]}
+                ]
+              }"
