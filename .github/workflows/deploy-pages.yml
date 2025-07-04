@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure'
     
     runs-on: ubuntu-latest
     
@@ -39,44 +39,211 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y jq
 
+          # Verificar se os arquivos de relatório existem
           if [ ! -f public/output.xml ]; then
-            echo "Arquivo output.xml não encontrado!"
-            exit 1
+            echo "⚠️ Arquivo output.xml não encontrado! Criando relatório básico..."
+            # Criar um relatório básico se não existir
+            cat > public/report.html << 'EOF'
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Relatório de Testes - Arquivo não encontrado</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; }
+                    .error { color: red; background: #ffe6e6; padding: 20px; border-radius: 5px; }
+                </style>
+            </head>
+            <body>
+                <h1>Relatório de Testes Robot Framework</h1>
+                <div class="error">
+                    <h2>⚠️ Arquivo de relatório não encontrado</h2>
+                    <p>O arquivo output.xml não foi gerado durante a execução dos testes.</p>
+                    <p>Possíveis causas:</p>
+                    <ul>
+                        <li>Os testes não foram executados completamente</li>
+                        <li>Erro na geração dos relatórios</li>
+                        <li>Problema na configuração do Robot Framework</li>
+                    </ul>
+                </div>
+            </body>
+            </html>
+            EOF
+            exit 0
           fi
 
+          # Verificar se o arquivo report.html existe
+          if [ ! -f public/report.html ]; then
+            echo "⚠️ Arquivo report.html não encontrado! Gerando a partir do output.xml..."
+            # Tentar gerar o relatório HTML a partir do output.xml
+            robot --outputdir public --report report.html --log log.html public/output.xml || true
+          fi
+
+          # Processar resultados dos testes
           FAILED_COUNT=$(grep -oP 'fail="\K[0-9]+' public/output.xml | head -1)
           if [ -z "$FAILED_COUNT" ]; then
             FAILED_COUNT=0
           fi
 
-          if [ "$FAILED_COUNT" -eq 0 ]; then
-            PROMPT="Todos os testes passaram com sucesso. Não há erros. Pode confirmar que o sistema está saudável?"
-          else
-            PROMPT="Foram encontrados $FAILED_COUNT erros nos testes automatizados. Abaixo está um trecho do relatório. Forneça insights ou possíveis causas para as falhas."
+          TOTAL_COUNT=$(grep -oP 'tests="\K[0-9]+' public/output.xml | head -1)
+          if [ -z "$TOTAL_COUNT" ]; then
+            TOTAL_COUNT=0
           fi
 
-          SUMMARY=$(head -n 50 public/report.html | sed 's/"/\\"/g')
+          echo "📊 Resultados dos testes: $FAILED_COUNT falhas de $TOTAL_COUNT total"
 
-          RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
-          -H "Content-Type: application/json" \
-          -H "X-goog-api-key: $GEMINI_API_KEY" \
-          -X POST \
-          -d "{
-                \"contents\": [
-                  {
-                    \"parts\": [
-                      {\"text\": \"$PROMPT\"},
-                      {\"text\": \"$SUMMARY\"}
-                    ]
-                  }
-                ]
-              }")
+          # Preparar prompt para o Gemini
+          if [ "$FAILED_COUNT" -eq 0 ]; then
+            PROMPT="Todos os $TOTAL_COUNT testes passaram com sucesso. Não há erros. Pode confirmar que o sistema está saudável?"
+          else
+            PROMPT="Foram encontrados $FAILED_COUNT erros em $TOTAL_COUNT testes automatizados. Abaixo está um trecho do relatório. Forneça insights ou possíveis causas para as falhas."
+          fi
 
-          INSIGHT=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
+          # Tentar obter resumo do relatório
+          if [ -f public/report.html ]; then
+            SUMMARY=$(head -n 50 public/report.html | sed 's/"/\\"/g' | tr -d '\n')
+          else
+            SUMMARY="Relatório HTML não disponível. Verificando output.xml..."
+          fi
 
-          HTML_BLOCK="<div style='border: 2px solid #333; padding: 1em; margin: 1em 0; background: #f9f9f9;'><h2>💡 Insights gerados pelo Gemini AI</h2><p>$INSIGHT</p></div>"
+          # Chamar API do Gemini se a chave estiver disponível
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "🤖 Enviando dados para análise do Gemini AI..."
+            
+            RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
+            -H "Content-Type: application/json" \
+            -H "X-goog-api-key: $GEMINI_API_KEY" \
+            -X POST \
+            -d "{
+                  \"contents\": [
+                    {
+                      \"parts\": [
+                        {\"text\": \"$PROMPT\"},
+                        {\"text\": \"$SUMMARY\"}
+                      ]
+                    }
+                  ]
+                }")
 
-          sed -i "/<\/body>/i $HTML_BLOCK" public/report.html
+            INSIGHT=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // "Não foi possível gerar insights no momento."')
+
+            # Adicionar insights ao relatório se existir
+            if [ -f public/report.html ]; then
+              HTML_BLOCK="<div style='border: 2px solid #333; padding: 1em; margin: 1em 0; background: #f9f9f9;'><h2>💡 Insights gerados pelo Gemini AI</h2><p>$INSIGHT</p></div>"
+              sed -i "/<\/body>/i $HTML_BLOCK" public/report.html
+            fi
+          else
+            echo "⚠️ GEMINI_API_KEY não configurada. Pulando análise de IA."
+          fi
+
+      - name: 🏠 Create index.html if not exists
+        run: |
+          if [ ! -f public/index.html ]; then
+            echo "📄 Criando arquivo index.html..."
+            cat > public/index.html << 'EOF'
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Relatórios de Testes Robot Framework</title>
+                <style>
+                    body { 
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                        margin: 0; 
+                        padding: 20px; 
+                        background: #f5f5f5; 
+                    }
+                    .container { 
+                        max-width: 1200px; 
+                        margin: 0 auto; 
+                        background: white; 
+                        padding: 30px; 
+                        border-radius: 10px; 
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+                    }
+                    h1 { 
+                        color: #333; 
+                        text-align: center; 
+                        margin-bottom: 30px; 
+                    }
+                    .file-list { 
+                        background: #f8f9fa; 
+                        padding: 20px; 
+                        border-radius: 5px; 
+                        margin: 20px 0; 
+                    }
+                    .file-item { 
+                        margin: 10px 0; 
+                        padding: 10px; 
+                        background: white; 
+                        border-left: 4px solid #007bff; 
+                        border-radius: 3px; 
+                    }
+                    .file-item a { 
+                        color: #007bff; 
+                        text-decoration: none; 
+                        font-weight: bold; 
+                    }
+                    .file-item a:hover { 
+                        text-decoration: underline; 
+                    }
+                    .status { 
+                        padding: 10px; 
+                        border-radius: 5px; 
+                        margin: 10px 0; 
+                    }
+                    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+                    .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+                    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>🤖 Relatórios de Testes Robot Framework</h1>
+                    
+                    <div class="status success">
+                        <strong>✅ Status:</strong> Relatórios gerados com sucesso
+                    </div>
+                    
+                    <div class="file-list">
+                        <h3>📁 Arquivos Disponíveis:</h3>
+                        <div class="file-item">
+                            <a href="report.html">📊 Relatório Principal (report.html)</a>
+                            <br><small>Relatório detalhado dos testes executados</small>
+                        </div>
+                        <div class="file-item">
+                            <a href="log.html">📝 Log Detalhado (log.html)</a>
+                            <br><small>Log completo com todos os detalhes da execução</small>
+                        </div>
+                        <div class="file-item">
+                            <a href="output.xml">📄 XML de Saída (output.xml)</a>
+                            <br><small>Dados brutos em formato XML</small>
+                        </div>
+                    </div>
+                    
+                    <div class="status warning">
+                        <strong>💡 Dica:</strong> Se algum arquivo não estiver disponível, verifique se os testes foram executados completamente.
+                    </div>
+                </div>
+            </body>
+            </html>
+            EOF
+          else
+            echo "📄 Arquivo index.html já existe"
+          fi
+
+      - name: 📋 List available files
+        run: |
+          echo "📁 Arquivos disponíveis no diretório public:"
+          ls -la public/ || echo "Diretório public não existe"
+          
+          echo ""
+          echo "📊 Verificando screenshots:"
+          find public/ -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" | head -10 || echo "Nenhum screenshot encontrado"
+          
+          echo ""
+          echo "📄 Verificando relatórios:"
+          find public/ -name "*.html" -o -name "*.xml" -o -name "*.log" | head -10 || echo "Nenhum relatório encontrado"
 
       - name: 📦 Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
