@@ -1,4 +1,4 @@
-name: DEPLOY_GITHUB_PAGES
+name: GEMINI_DEPLOY_GITHUB_PAGES_CD
 
 on:
   workflow_run:
@@ -33,6 +33,51 @@ jobs:
       - name: ⚙️ Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: 📊 Check test results, send to Gemini and update report
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+
+          if [ ! -f public/output.xml ]; then
+            echo "Arquivo output.xml não encontrado!"
+            exit 1
+          fi
+
+          FAILED_COUNT=$(grep -oP 'fail="\K[0-9]+' public/output.xml | head -1)
+          if [ -z "$FAILED_COUNT" ]; then
+            FAILED_COUNT=0
+          fi
+
+          if [ "$FAILED_COUNT" -eq 0 ]; then
+            PROMPT="Todos os testes passaram com sucesso. Não há erros. Pode confirmar que o sistema está saudável?"
+          else
+            PROMPT="Foram encontrados $FAILED_COUNT erros nos testes automatizados. Abaixo está um trecho do relatório. Forneça insights ou possíveis causas para as falhas."
+          fi
+
+          SUMMARY=$(head -n 50 public/report.html | sed 's/"/\\"/g')
+
+          RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
+          -H "Content-Type: application/json" \
+          -H "X-goog-api-key: $GEMINI_API_KEY" \
+          -X POST \
+          -d "{
+                \"contents\": [
+                  {
+                    \"parts\": [
+                      {\"text\": \"$PROMPT\"},
+                      {\"text\": \"$SUMMARY\"}
+                    ]
+                  }
+                ]
+              }")
+
+          INSIGHT=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
+
+          HTML_BLOCK="<div style='border: 2px solid #333; padding: 1em; margin: 1em 0; background: #f9f9f9;'><h2>💡 Insights gerados pelo Gemini AI</h2><p>$INSIGHT</p></div>"
+
+          sed -i "/<\/body>/i $HTML_BLOCK" public/report.html
+
       - name: 📦 Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -41,47 +86,3 @@ jobs:
       - name: 📢 Publish to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: 📊 Check test results and send to Gemini
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          # Verifica se o output.xml existe
-          if [ ! -f public/output.xml ]; then
-            echo "Arquivo output.xml não encontrado!"
-            exit 1
-          fi
-
-          # Extrai o número de falhas
-          FAILED_COUNT=$(grep -oP 'fail="\K[0-9]+' public/output.xml | head -1)
-          if [ -z "$FAILED_COUNT" ]; then
-            FAILED_COUNT=0
-          fi
-
-          # Define o prompt conforme o número de falhas
-          if [ "$FAILED_COUNT" -eq 0 ]; then
-            PROMPT="Todos os testes passaram com sucesso. Não há erros. Pode confirmar que o sistema está saudável?"
-          else
-            PROMPT="Foram encontrados $FAILED_COUNT erros nos testes automatizados. Abaixo está um trecho do relatório. Forneça insights ou possíveis causas para as falhas."
-          fi
-
-          # Pega os primeiros 50 linhas do relatório
-          SUMMARY=$(head -n 50 public/report.html | sed 's/"/\\"/g')
-
-          # Chamada correta ao Gemini AI
-          curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
-          -H "Content-Type: application/json" \
-          -H "X-goog-api-key: $GEMINI_API_KEY" \
-          -X POST \
-          -d "{
-                \"contents\": [
-                  {
-                    \"parts\": [
-                      {\"text\": \"$PROMPT-$SUMMARY\"}
-                    ]
-                  }
-                ]
-              }"
-
-
-
