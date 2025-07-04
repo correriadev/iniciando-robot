@@ -12,9 +12,9 @@ on:
 
 # Permissões necessárias para fazer o deploy no GitHub Pages.
 permissions:
-  contents: read
+  contents: write
   pages: write
-  id-token: write # Essencial para as versões mais recentes da action de deploy.
+  id-token: write
 
 jobs:
   deploy:
@@ -23,39 +23,56 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
     
     runs-on: ubuntu-latest
-    
-    # Configura o ambiente de deploy para o GitHub Pages
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      # A action de checkout não é mais necessária, pois vamos baixar o artefato
-      # diretamente do outro workflow.
-
       - name: ⬇️ Download artifact from the completed workflow
         uses: actions/download-artifact@v4
         with:
-          # O nome do artefato deve ser o mesmo usado no 'upload-artifact'
-          # do seu workflow de CI/CD.
           name: robot-test-reports
-          path: public # Baixa os arquivos para uma pasta 'public'
-          
-          # Informa à action de qual execução de workflow baixar o artefato.
+          path: public
           github-token: ${{ secrets.ACTIONS_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: ⚙️ Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      - name: 📝 Create index.html
+        run: |
+          cat > public/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Robot Framework Test Reports</title>
+              <meta charset="utf-8">
+              <style>
+                  body { font-family: Arial, sans-serif; margin: 40px; }
+                  h1 { color: #333; }
+                  .file { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; }
+                  a { color: #0066cc; text-decoration: none; }
+                  a:hover { text-decoration: underline; }
+              </style>
+          </head>
+          <body>
+              <h1>🤖 Robot Framework Test Reports</h1>
+              <p>Relatórios de teste gerados automaticamente pelo Robot Framework.</p>
+              
+              <h2>📊 Relatórios Disponíveis:</h2>
+              <div class="file">
+                  <a href="log.html">📋 Log Detalhado</a> - Log completo da execução dos testes
+              </div>
+              <div class="file">
+                  <a href="report.html">📈 Relatório de Resultados</a> - Resumo dos resultados dos testes
+              </div>
+              <div class="file">
+                  <a href="output.xml">📄 Output XML</a> - Dados estruturados dos testes
+              </div>
+              
+              <hr>
+              <p><small>Gerado em: $(date)</small></p>
+          </body>
+          </html>
+          EOF
 
-      - name: 📦 Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3 # <-- ATUALIZADO
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          # Faz o upload da pasta que contém os logs para o GitHub Pages
-          path: ./public
-
-      - name: 📢 Publish to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4 # <-- ATUALIZADO
+          github_token: ${{ secrets.ACTIONS_TOKEN }}
+          publish_dir: ./public
+          force_orphan: true
