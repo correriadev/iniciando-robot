@@ -30,7 +30,7 @@ jobs:
         with:
           name: robot-test-reports
           path: public
-          github-token: ${{ secrets.ACTIONS_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
       - name: 📝 Create index.html
@@ -73,6 +73,6 @@ jobs:
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.ACTIONS_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           force_orphan: true
