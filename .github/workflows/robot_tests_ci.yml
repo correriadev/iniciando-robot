@@ -34,7 +34,7 @@ jobs:
     - name: Install Backend dependencies
       run: |
         cd cinema-challenge-back
-        npm install
+        npm ci
 
     - name: Create .env file for Backend
       run: |
@@ -68,7 +68,7 @@ jobs:
     - name: Install Frontend dependencies
       run: |
         cd cinema-challenge-front
-        npm install
+        npm ci
 
     - name: Create .env.local file for Frontend
       run: |
@@ -102,10 +102,19 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
     - name: Install Robot Framework dependencies
       run: |
+        # Instala todas as dependências do requirements.txt atualizado
         pip install -r requirements.txt
-        pip install robotframework-requests robotframework-browser
+        # Inicializa o Robot Framework Browser com os navegadores
         rfbrowser init
 
     - name: Run Robot Framework tests
