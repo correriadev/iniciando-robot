@@ -46,7 +46,9 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
 
       - name: ⚙️ Configure Pages
-        uses: actions/configure-pages@v5 # <-- ATUALIZADO
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: 📦 Upload Pages artifact
         uses: actions/upload-pages-artifact@v3 # <-- ATUALIZADO
