@@ -1,4 +1,4 @@
-name: CI - Controlled Robot Tests with Local MongoDB, Backend, Frontend (Vite)
+name: ROBOT_TESTS_CI
 
 on:
   push:

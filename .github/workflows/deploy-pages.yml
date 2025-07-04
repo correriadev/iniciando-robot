@@ -1,12 +1,12 @@
 # .github/workflows/deploy-pages.yml
-name: 🚀 Deploy Test Reports to GitHub Pages
+name: DEPLOY_GITHUB_PAGES
 
 on:
   # Este gatilho (trigger) é a forma mais robusta de encadear workflows.
   # Ele vai iniciar este workflow APENAS DEPOIS que o workflow "CI/CD Pipeline"
   # for concluído. Isso evita erros de "artefato não encontrado".
   workflow_run:
-    workflows: ["robot_tests_ci"] # <-- IMPORTANTE: O nome deve ser EXATAMENTE igual ao 'name:' do seu outro arquivo de workflow.
+    workflows: ["ROBOT_TESTS_CI"] # <-- IMPORTANTE: O nome deve ser EXATAMENTE igual ao 'name:' do seu outro arquivo de workflow.
     types:
       - completed
 
