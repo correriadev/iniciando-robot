@@ -1,0 +1,59 @@
+# .github/workflows/deploy-pages.yml
+name: 🚀 Deploy Test Reports to GitHub Pages
+
+on:
+  # Este gatilho (trigger) é a forma mais robusta de encadear workflows.
+  # Ele vai iniciar este workflow APENAS DEPOIS que o workflow "CI/CD Pipeline"
+  # for concluído. Isso evita erros de "artefato não encontrado".
+  workflow_run:
+    workflows: ["robot_tests_ci"] # <-- IMPORTANTE: O nome deve ser EXATAMENTE igual ao 'name:' do seu outro arquivo de workflow.
+    types:
+      - completed
+
+# Permissões necessárias para fazer o deploy no GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write # Essencial para as versões mais recentes da action de deploy.
+
+jobs:
+  deploy:
+    # Esta condição garante que o deploy só aconteça se o workflow anterior
+    # (CI/CD Pipeline) tiver sido executado com sucesso.
+    if: github.event.workflow_run.conclusion == 'success'
+    
+    runs-on: ubuntu-latest
+    
+    # Configura o ambiente de deploy para o GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # A action de checkout não é mais necessária, pois vamos baixar o artefato
+      # diretamente do outro workflow.
+
+      - name: ⬇️ Download artifact from the completed workflow
+        uses: actions/download-artifact@v4
+        with:
+          # O nome do artefato deve ser o mesmo usado no 'upload-artifact'
+          # do seu workflow de CI/CD.
+          name: robot-logs
+          path: public # Baixa os arquivos para uma pasta 'public'
+          
+          # Informa à action de qual execução de workflow baixar o artefato.
+          github-token: ${{ secrets.ACTIONS_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: ⚙️ Configure Pages
+        uses: actions/configure-pages@v5 # <-- ATUALIZADO
+
+      - name: 📦 Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3 # <-- ATUALIZADO
+        with:
+          # Faz o upload da pasta que contém os logs para o GitHub Pages
+          path: ./public
+
+      - name: 📢 Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 # <-- ATUALIZADO
