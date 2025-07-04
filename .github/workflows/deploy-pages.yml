@@ -3,7 +3,7 @@ name: DEPLOY_GITHUB_PAGES
 
 on:
   # Este gatilho (trigger) é a forma mais robusta de encadear workflows.
-  # Ele vai iniciar este workflow APENAS DEPOIS que o workflow "CI/CD Pipeline"
+  # Ele vai iniciar este workflow APENAS DEPOIS que o workflow "ROBOT_TESTS_CI"
   # for concluído. Isso evita erros de "artefato não encontrado".
   workflow_run:
     workflows: ["ROBOT_TESTS_CI"] # <-- IMPORTANTE: O nome deve ser EXATAMENTE igual ao 'name:' do seu outro arquivo de workflow.
@@ -19,7 +19,7 @@ permissions:
 jobs:
   deploy:
     # Esta condição garante que o deploy só aconteça se o workflow anterior
-    # (CI/CD Pipeline) tiver sido executado com sucesso.
+    # (ROBOT_TESTS_CI) tiver sido executado com sucesso.
     if: github.event.workflow_run.conclusion == 'success'
     
     runs-on: ubuntu-latest
@@ -38,7 +38,7 @@ jobs:
         with:
           # O nome do artefato deve ser o mesmo usado no 'upload-artifact'
           # do seu workflow de CI/CD.
-          name: robot-logs
+          name: robot-test-reports
           path: public # Baixa os arquivos para uma pasta 'public'
           
           # Informa à action de qual execução de workflow baixar o artefato.
