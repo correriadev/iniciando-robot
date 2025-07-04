@@ -1,4 +1,4 @@
-name: GEMINI_DEPLOY_GITHUB_PAGES_CD
+name: DEPLOY_TO_GITHUB_PAGES
 
 on:
   workflow_run:
@@ -33,113 +33,11 @@ jobs:
       - name: ⚙️ Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: 📊 Check test results, send to Gemini and update report
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          sudo apt-get update && sudo apt-get install -y jq
-
-          # Verificar se os arquivos de relatório existem
-          if [ ! -f public/output.xml ]; then
-            echo "⚠️ Arquivo output.xml não encontrado! Criando relatório básico..."
-            # Criar um relatório básico se não existir
-            cat > public/report.html << 'BASIC_EOF'
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Relatório de Testes - Arquivo não encontrado</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 40px; }
-                    .error { color: red; background: #ffe6e6; padding: 20px; border-radius: 5px; }
-                </style>
-            </head>
-            <body>
-                <h1>Relatório de Testes Robot Framework</h1>
-                <div class="error">
-                    <h2>⚠️ Arquivo de relatório não encontrado</h2>
-                    <p>O arquivo output.xml não foi gerado durante a execução dos testes.</p>
-                    <p>Possíveis causas:</p>
-                    <ul>
-                        <li>Os testes não foram executados completamente</li>
-                        <li>Erro na geração dos relatórios</li>
-                        <li>Problema na configuração do Robot Framework</li>
-                    </ul>
-                </div>
-            </body>
-            </html>
-            BASIC_EOF
-            exit 0
-          fi
-
-          # Verificar se o arquivo report.html existe
-          if [ ! -f public/report.html ]; then
-            echo "⚠️ Arquivo report.html não encontrado! Gerando a partir do output.xml..."
-            # Tentar gerar o relatório HTML a partir do output.xml
-            robot --outputdir public --report report.html --log log.html public/output.xml || true
-          fi
-
-          # Processar resultados dos testes
-          FAILED_COUNT=$(grep -oP 'fail="\K[0-9]+' public/output.xml | head -1)
-          if [ -z "$FAILED_COUNT" ]; then
-            FAILED_COUNT=0
-          fi
-
-          TOTAL_COUNT=$(grep -oP 'tests="\K[0-9]+' public/output.xml | head -1)
-          if [ -z "$TOTAL_COUNT" ]; then
-            TOTAL_COUNT=0
-          fi
-
-          echo "📊 Resultados dos testes: $FAILED_COUNT falhas de $TOTAL_COUNT total"
-
-          # Preparar prompt para o Gemini
-          if [ "$FAILED_COUNT" -eq 0 ]; then
-            PROMPT="Todos os $TOTAL_COUNT testes passaram com sucesso. Não há erros. Pode confirmar que o sistema está saudável?"
-          else
-            PROMPT="Foram encontrados $FAILED_COUNT erros em $TOTAL_COUNT testes automatizados. Abaixo está um trecho do relatório. Forneça insights ou possíveis causas para as falhas."
-          fi
-
-          # Tentar obter resumo do relatório
-          if [ -f public/report.html ]; then
-            SUMMARY=$(head -n 50 public/report.html | sed 's/"/\\"/g' | tr -d '\n')
-          else
-            SUMMARY="Relatório HTML não disponível. Verificando output.xml..."
-          fi
-
-          # Chamar API do Gemini se a chave estiver disponível
-          if [ -n "$GEMINI_API_KEY" ]; then
-            echo "🤖 Enviando dados para análise do Gemini AI..."
-            
-            RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
-            -H "Content-Type: application/json" \
-            -H "X-goog-api-key: $GEMINI_API_KEY" \
-            -X POST \
-            -d "{
-                  \"contents\": [
-                    {
-                      \"parts\": [
-                        {\"text\": \"$PROMPT\"},
-                        {\"text\": \"$SUMMARY\"}
-                      ]
-                    }
-                  ]
-                }")
-
-            INSIGHT=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // "Não foi possível gerar insights no momento."')
-
-            # Adicionar insights ao relatório se existir
-            if [ -f public/report.html ]; then
-              HTML_BLOCK="<div style='border: 2px solid #333; padding: 1em; margin: 1em 0; background: #f9f9f9;'><h2>💡 Insights gerados pelo Gemini AI</h2><p>$INSIGHT</p></div>"
-              sed -i "/<\/body>/i $HTML_BLOCK" public/report.html
-            fi
-          else
-            echo "⚠️ GEMINI_API_KEY não configurada. Pulando análise de IA."
-          fi
-
-      - name: 🏠 Create index.html if not exists
+      - name: 🏠 Create simple index page
         run: |
           if [ ! -f public/index.html ]; then
-            echo "📄 Criando arquivo index.html..."
-            cat > public/index.html << 'INDEX_EOF'
+            echo "📄 Criando página inicial simples..."
+            cat > public/index.html << 'EOF'
             <!DOCTYPE html>
             <html lang="pt-BR">
             <head>
@@ -148,130 +46,51 @@ jobs:
                 <title>Relatórios de Testes Robot Framework</title>
                 <style>
                     body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-                    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+                    .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
                     h1 { color: #333; text-align: center; margin-bottom: 30px; }
                     .file-list { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
                     .file-item { margin: 10px 0; padding: 10px; background: white; border-left: 4px solid #007bff; border-radius: 3px; }
                     .file-item a { color: #007bff; text-decoration: none; font-weight: bold; }
-                    .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
-                    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-                    .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
                 </style>
             </head>
             <body>
                 <div class="container">
                     <h1>🤖 Relatórios de Testes Robot Framework</h1>
-                    <div class="status success">
-                        <strong>✅ Status:</strong> Relatórios gerados com sucesso
-                    </div>
                     <div class="file-list">
                         <h3>📁 Arquivos Disponíveis:</h3>
                         <div class="file-item">
                             <a href="report.html">📊 Relatório Principal (report.html)</a>
-                            <br><small>Relatório detalhado dos testes executados</small>
                         </div>
                         <div class="file-item">
                             <a href="log.html">📝 Log Detalhado (log.html)</a>
-                            <br><small>Log completo com todos os detalhes da execução</small>
                         </div>
                         <div class="file-item">
                             <a href="output.xml">📄 XML de Saída (output.xml)</a>
-                            <br><small>Dados brutos em formato XML</small>
                         </div>
                         <div class="file-item">
                             <a href="browser/screenshot/">📸 Screenshots dos Testes</a>
-                            <br><small>Capturas de tela durante a execução dos testes</small>
-                        </div>
-                    </div>
-                    <div class="status warning">
-                        <strong>💡 Dica:</strong> Se algum arquivo não estiver disponível, verifique se os testes foram executados completamente.
-                    </div>
-                </div>
-            </body>
-            </html>
-            INDEX_EOF
-          else
-            echo "📄 Arquivo index.html já existe"
-          fi
-
-      - name: 📸 Create screenshots gallery
-        run: |
-          if [ -d "public/browser/screenshot" ]; then
-            echo "📸 Criando galeria de screenshots..."
-            cat > public/browser/screenshot/index.html << 'GALLERY_EOF'
-            <!DOCTYPE html>
-            <html lang="pt-BR">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Screenshots dos Testes</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-                    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
-                    h1 { color: #333; text-align: center; margin-bottom: 30px; }
-                    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-                    .screenshot-item { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white; }
-                    .screenshot-item img { width: 100%; height: 200px; object-fit: cover; cursor: pointer; }
-                    .screenshot-info { padding: 15px; }
-                    .back-link { text-align: center; margin: 20px 0; }
-                    .back-link a { color: #007bff; text-decoration: none; font-weight: bold; padding: 10px 20px; border: 2px solid #007bff; border-radius: 5px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>📸 Galeria de Screenshots dos Testes</h1>
-                    <div class="back-link">
-                        <a href="../index.html">← Voltar ao Relatório Principal</a>
-                    </div>
-                    <div class="gallery" id="screenshot-gallery">
-                        <div class="screenshot-item">
-                            <img src="test-1.png" alt="Screenshot 1" onerror="this.style.display='none'">
-                            <div class="screenshot-info">
-                                <h3>Teste 1</h3>
-                                <p>Screenshot do primeiro teste</p>
-                            </div>
-                        </div>
-                        <div class="screenshot-item">
-                            <img src="test-2.png" alt="Screenshot 2" onerror="this.style.display='none'">
-                            <div class="screenshot-info">
-                                <h3>Teste 2</h3>
-                                <p>Screenshot do segundo teste</p>
-                            </div>
-                        </div>
-                        <div class="screenshot-item">
-                            <img src="CTW-015-sucesso-1.png" alt="Sucesso" onerror="this.style.display='none'">
-                            <div class="screenshot-info">
-                                <h3>CTW-015 Sucesso</h3>
-                                <p>Teste de sucesso</p>
-                            </div>
                         </div>
                     </div>
                 </div>
             </body>
             </html>
-            GALLERY_EOF
-          else
-            echo "📸 Diretório de screenshots não encontrado"
+            EOF
           fi
 
-      - name: 📋 List available files
+      - name: 📋 List files for debugging
         run: |
-          echo "📁 Arquivos disponíveis no diretório public:"
+          echo "📁 Arquivos disponíveis:"
           ls -la public/ || echo "Diretório public não existe"
           
           echo ""
-          echo "📊 Verificando screenshots:"
-          find public/ -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" | head -10 || echo "Nenhum screenshot encontrado"
-          
-          echo ""
-          echo "📄 Verificando relatórios:"
-          find public/ -name "*.html" -o -name "*.xml" -o -name "*.log" | head -10 || echo "Nenhum relatório encontrado"
+          echo "📊 Screenshots encontrados:"
+          find public/ -name "*.png" -o -name "*.jpg" | head -5 || echo "Nenhum screenshot encontrado"
 
-      - name: 📦 Upload Pages artifact
+      - name: 📦 Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
-      - name: 📢 Publish to GitHub Pages
+      - name: 📢 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
