@@ -2,7 +2,7 @@ name: ANALYZE_TEST_CRITICALITY
 
 on:
   workflow_run:
-    workflows: ["DEPLOY_TO_GITHUB_PAGES"]
+    workflows: ["ROBOT_TESTS_CI"]
     types:
       - completed
 
