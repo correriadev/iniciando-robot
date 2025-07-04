@@ -33,6 +33,208 @@ jobs:
       - name: ⚙️ Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: 🏠 Create index.html for navigation
+        run: |
+          echo "📄 Criando index.html para navegação..."
+          cat > public/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="pt-BR">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Relatórios de Testes Robot Framework</title>
+              <style>
+                  body { 
+                      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                      margin: 0; 
+                      padding: 20px; 
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      min-height: 100vh;
+                  }
+                  .container { 
+                      max-width: 900px; 
+                      margin: 0 auto; 
+                      background: white; 
+                      padding: 40px; 
+                      border-radius: 15px; 
+                      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                  }
+                  h1 { 
+                      color: #333; 
+                      text-align: center; 
+                      margin-bottom: 30px; 
+                      font-size: 2.5em;
+                      background: linear-gradient(45deg, #667eea, #764ba2);
+                      -webkit-background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                      background-clip: text;
+                  }
+                  .status-badge {
+                      display: inline-block;
+                      padding: 8px 16px;
+                      border-radius: 20px;
+                      font-size: 14px;
+                      font-weight: bold;
+                      margin-bottom: 20px;
+                  }
+                  .success { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
+                  .warning { background: #fff3cd; color: #856404; border: 2px solid #ffeaa7; }
+                  .file-grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      gap: 20px;
+                      margin: 30px 0;
+                  }
+                  .file-card {
+                      background: #f8f9fa;
+                      border: 2px solid #e9ecef;
+                      border-radius: 10px;
+                      padding: 20px;
+                      transition: all 0.3s ease;
+                      text-decoration: none;
+                      color: inherit;
+                      display: block;
+                  }
+                  .file-card:hover {
+                      transform: translateY(-5px);
+                      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                      border-color: #667eea;
+                  }
+                  .file-card h3 {
+                      margin: 0 0 10px 0;
+                      color: #333;
+                      font-size: 1.2em;
+                  }
+                  .file-card p {
+                      margin: 0;
+                      color: #666;
+                      font-size: 0.9em;
+                  }
+                  .file-icon {
+                      font-size: 2em;
+                      margin-bottom: 10px;
+                      display: block;
+                  }
+                  .screenshots-section {
+                      background: #fff;
+                      border: 2px solid #e9ecef;
+                      border-radius: 10px;
+                      padding: 20px;
+                      margin: 20px 0;
+                  }
+                  .screenshots-grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                      gap: 15px;
+                      margin-top: 15px;
+                  }
+                  .screenshot-item {
+                      text-align: center;
+                      padding: 10px;
+                      border: 1px solid #ddd;
+                      border-radius: 8px;
+                      background: #f8f9fa;
+                      transition: all 0.3s ease;
+                  }
+                  .screenshot-item:hover {
+                      transform: scale(1.05);
+                      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                  }
+                  .screenshot-item img {
+                      width: 100%;
+                      height: 100px;
+                      object-fit: cover;
+                      border-radius: 5px;
+                      margin-bottom: 8px;
+                  }
+                  .footer {
+                      text-align: center;
+                      margin-top: 30px;
+                      padding-top: 20px;
+                      border-top: 1px solid #e9ecef;
+                      color: #666;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🤖 Relatórios de Testes Robot Framework</h1>
+                  
+                  <div style="text-align: center;">
+                      <span class="status-badge success">✅ Relatórios Disponíveis</span>
+                  </div>
+                  
+                  <div class="file-grid">
+                      <a href="report.html" class="file-card">
+                          <span class="file-icon">📊</span>
+                          <h3>Relatório Principal</h3>
+                          <p>Relatório detalhado com resultados dos testes executados</p>
+                      </a>
+                      
+                      <a href="log.html" class="file-card">
+                          <span class="file-icon">📝</span>
+                          <h3>Log Detalhado</h3>
+                          <p>Log completo com todos os detalhes da execução dos testes</p>
+                      </a>
+                      
+                      <a href="output.xml" class="file-card">
+                          <span class="file-icon">📄</span>
+                          <h3>XML de Saída</h3>
+                          <p>Dados brutos em formato XML para análise técnica</p>
+                      </a>
+                      
+                      <a href="browser/screenshot/" class="file-card">
+                          <span class="file-icon">📸</span>
+                          <h3>Screenshots</h3>
+                          <p>Capturas de tela durante a execução dos testes de frontend</p>
+                      </a>
+                  </div>
+                  
+                  <div class="screenshots-section">
+                      <h3>📸 Screenshots Disponíveis</h3>
+                      <div class="screenshots-grid" id="screenshots-grid">
+                          <!-- Screenshots serão carregados dinamicamente -->
+                      </div>
+                  </div>
+                  
+                  <div class="footer">
+                      <p>📅 Gerado automaticamente pelo Robot Framework</p>
+                      <p>🔄 Atualizado a cada execução dos testes</p>
+                  </div>
+              </div>
+              
+              <script>
+                  // Função para carregar screenshots dinamicamente
+                  function loadScreenshots() {
+                      const grid = document.getElementById('screenshots-grid');
+                      const commonScreenshots = [
+                          'test-1.png', 'test-2.png', 'test-3.png', 'test-4.png',
+                          'test-5.png', 'test-6.png', 'test-7.png', 'test-8.png',
+                          'test-9.png', 'test-10.png', 'test-11.png', 'test-12.png',
+                          'CTW-015-sucesso-1.png', 'failure_1.png'
+                      ];
+                      
+                      commonScreenshots.forEach((filename, index) => {
+                          const item = document.createElement('div');
+                          item.className = 'screenshot-item';
+                          item.innerHTML = `
+                              <img src="browser/screenshot/${filename}" 
+                                   alt="Screenshot ${index + 1}" 
+                                   onerror="this.parentElement.style.display='none'"
+                                   onclick="window.open(this.src, '_blank')">
+                              <div>${filename.replace('.png', '')}</div>
+                          `;
+                          grid.appendChild(item);
+                      });
+                  }
+                  
+                  // Carregar screenshots quando a página carregar
+                  window.onload = loadScreenshots;
+              </script>
+          </body>
+          </html>
+          EOF
+
       - name: 📋 List files for debugging
         run: |
           echo "📁 Arquivos disponíveis:"
